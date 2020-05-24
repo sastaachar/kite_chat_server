@@ -19,6 +19,7 @@ const http = require("http");
       {
         useNewUrlParser: true,
         useUnifiedTopology: true,
+        useCreateIndex: true,
       }
     );
     console.log("Connected to database");
@@ -38,6 +39,7 @@ app.use(cors());
 //Routees
 app.use("/", require("./routes/main"));
 app.use("/users", require("./routes/users"));
+app.use("/refreshToken", require("./routes/refreshToken"));
 
 //start listening
 server.listen(PORT, () => {

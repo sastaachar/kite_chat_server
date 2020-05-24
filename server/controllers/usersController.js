@@ -1,134 +1,83 @@
-const Article = require("../models/article");
+const bcrypt = require("bcrypt");
 
-const addArticle = async (req, res) => {
+const User = require("../models/user");
+
+const { getJwtToken, getRefreshJwtToken } = require("../utils/auth");
+
+const addUser = async (req, res) => {
   try {
-    const data = req.body.data;
-    let newArticle = [];
-    for (const [, value] of Object.entries(data)) {
-      const article = new Article({
-        title: value.title,
-        description: value.description,
-        author: value.author,
-        tags: value.tags,
-        time: value.time,
-      });
-      newArticle.push(await article.save());
-    }
-    //201 cause its sucess
-    res.status(201).json({ message: newArticle });
-  } catch (err) {
-    //client's mistake
-    res.status(401).json({ message: err.message });
-  }
-};
+    if (!req.body.password) throw new Error("Password cannot be empty!");
 
-const getArticles = async (req, res) => {
-  try {
-    let message = {};
-    let searchOptions = {};
+    const hashedPassword = bcrypt.hashSync(req.body.password, 10);
 
-    if (req.query.title) {
-      searchOptions.title =
-        req.query.noRegxTitle || req.query.noRegxAll
-          ? req.query.title
-          : new RegExp(req.query.title, "i");
-    }
-    if (req.query.author) {
-      searchOptions.author =
-        req.query.noRegxAuthor || req.query.noRegxAll
-          ? req.query.author
-          : new RegExp(req.query.author, "i");
-    }
-    if (req.query.tags) {
-      if (typeof req.query.tags === "string") {
-        searchOptions.tags =
-          req.query.noRegxTags || req.query.noRegxAll
-            ? req.query.tags
-            : new RegExp(req.query.tags, "i");
-      } else {
-        let searchTags = [];
-        if (req.query.noRegxTags || req.query.noRegxAll) {
-          req.query.tags.forEach((tag) => {
-            searchTags.push(tag);
-          });
-        } else {
-          req.query.tags.forEach((tag) => {
-            searchTags.push(new RegExp(tag, "i"));
-          });
-        }
-        searchOptions.tags = { $all: searchTags };
-      }
-    }
-
-    if (req.query.fromDate) {
-      searchOptions.time = {
-        $gte: new Date(req.query.fromDate),
-        $lte: new Date(req.query.toDate || Date.now()),
-      };
-    }
-
-    let sortOptions = {};
-    sortOptions[req.query.sortBy || "time"] =
-      req.query.orderBy === "asc" ? 1 : -1;
-
-    if (!(req.query.metaOnly || req.query.noArticle)) {
-      const articles = await Article.find(searchOptions)
-        .sort(sortOptions)
-        .limit(parseInt(req.query.limit));
-
-      message.articles = articles;
-    }
-    if (req.query.metaTags || req.query.metaOnly) {
-      message.tags = await Article.distinct("tags", searchOptions);
-    }
-    if (req.query.metaAuthors || req.query.metaOnly) {
-      message.authors = await Article.distinct("author", searchOptions);
-    }
-
-    res.status(201).json({ message: message });
-  } catch (err) {
-    //500 for any internal error i.e my fault
-    res.status(500).json({ message: err.message });
-  }
-};
-
-const getArticleById = async (req, res) => {
-  try {
-    const article = await Article.findOne({ _id: req.params.articleID });
-    res.status(201).json({ message: article });
-  } catch (err) {
-    //wrong id by user
-    res.status(401).json({ message: err.message });
-  }
-};
-
-const deleteArticleById = async (req, res) => {
-  try {
-    const deleteMessage = await Article.deleteOne({
-      _id: req.params.articleID,
+    let newuser = new User({
+      userName: req.body.userName,
+      email: req.body.email,
+      password: hashedPassword,
     });
-    res.status(201).json({ message: deleteMessage });
+    newuser = await newuser.save();
+
+    res.status(200).json({ message: "User Created" });
   } catch (err) {
-    res.status(401).json({ message: err });
+    res.status(401).json({ message: err.message });
   }
 };
 
-const patchArticleById = async (req, res) => {
+const deleteUser = async (req, res) => {
   try {
-    const updateMessage = await Article.updateOne(
-      { _id: req.params.articleID },
-      { $set: req.body }
-    );
-    res.status(201).json({ message: updateMessage });
+    console.log(req.params.userId);
+    //delete the user here
+    await User.deleteOne({ _id: req.params.userId });
+    res.status(200).json({
+      message: `User ${req.params.userId} deleted sucessfully`,
+    });
   } catch (err) {
-    res.status(401).json({ message: err });
+    res.status(500).json({
+      message: err.message,
+    });
   }
 };
 
+const loginUser = async (req, res) => {
+  try {
+    //login the user here
+
+    //if email is there login with that
+    //else use userName
+    let email_uname = req.body.email
+      ? { email: req.body.email }
+      : { userName: req.body.userName };
+
+    const user = await User.findOne(email_uname);
+
+    //if user doesnt exist or
+    //wrong password
+    if (!user || !bcrypt.compareSync(req.body.password, user.password))
+      throw new Error("Auth Error");
+
+    //get token and refresh token
+    const jwtToken = getJwtToken(user);
+    const refreshJwtToken = getRefreshJwtToken(user);
+
+    res.cookie("sasachid", refreshJwtToken, {
+      maxAge: 604800000,
+      httpOnly: true,
+    });
+
+    res.status(200).json({
+      message: "login Sucessfull",
+      jwtToken,
+      ...email_uname,
+    });
+  } catch (err) {
+    console.log(err);
+    res.status(400).json({
+      message: err,
+    });
+  }
+};
 module.exports = {
-  getArticles,
-  deleteArticleById,
-  addArticle,
-  patchArticleById,
-  getArticleById,
+  addUser,
+  loginUser,
+  deleteUser,
 };

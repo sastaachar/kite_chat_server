@@ -8,9 +8,9 @@ module.exports = (req, res, next) => {
 
     //pass the paylaod
     let payload = checkToken(token, process.env.JWT_KEY);
-    req.payload = payload;
+    res.payload = payload;
 
-    //call the next middlewares
+    //call the next middleware
     next();
   } catch (err) {
     res.status(409).json({

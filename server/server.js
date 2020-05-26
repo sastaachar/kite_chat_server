@@ -33,8 +33,8 @@ const app = express();
 const server = http.createServer(app);
 
 //middlewares
-app.use(express.json());
 app.use(cors());
+app.use(express.json());
 
 //Routees
 app.use("/", require("./routes/main"));

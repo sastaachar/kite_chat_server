@@ -23,13 +23,34 @@ const addUser = async (req, res) => {
   }
 };
 
+const getUser = async (req, res) => {
+  try {
+    let userName = req.payload.userName;
+    let user = await User.findOne({ userName });
+    let userDetails = { ...user._doc };
+    delete userDetails._id;
+    delete userDetails.password;
+    delete userDetails.__v;
+
+    res.status(200).json({
+      message: userDetails ? "Found user" : "No such user idoit",
+      userDetails,
+    });
+  } catch (err) {
+    res.status(401).json({
+      message: err,
+    });
+  }
+};
+
 const deleteUser = async (req, res) => {
   try {
     console.log(req.params.userId);
     //delete the user here
-    await User.deleteOne({ _id: req.params.userId });
+    let userName = req.payload.userName;
+    await User.deleteOne({ userName });
     res.status(200).json({
-      message: `User ${req.params.userId} deleted sucessfully`,
+      message: `User ${userName} deleted sucessfully`,
     });
   } catch (err) {
     res.status(500).json({
@@ -48,7 +69,7 @@ const loginUser = async (req, res) => {
       ? { email: req.body.email }
       : { userName: req.body.userName };
 
-    const user = await User.findOne(email_uname);
+    let user = await User.findOne(email_uname);
 
     //if user doesnt exist or
     //wrong password
@@ -64,14 +85,20 @@ const loginUser = async (req, res) => {
       httpOnly: true,
     });
 
+    // bit of a hack
+    // don't send unnessary data idiot
+    let userDetails = { ...user._doc };
+    delete userDetails._id;
+    delete userDetails.password;
+    delete userDetails.__v;
+
     res.status(200).json({
       message: "login Sucessfull",
       jwtToken,
-      ...email_uname,
+      userDetails,
     });
   } catch (err) {
-    console.log(err);
-    res.status(400).json({
+    res.status(401).json({
       message: err,
     });
   }
@@ -80,4 +107,5 @@ module.exports = {
   addUser,
   loginUser,
   deleteUser,
+  getUser,
 };

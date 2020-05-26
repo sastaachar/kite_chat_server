@@ -8,10 +8,9 @@ const {
 } = require("../utils/auth");
 const User = require("../models/user");
 
-router.post("/", cookieParser(), async (req, res) => {
+router.get("/:userName", cookieParser(), async (req, res) => {
   let token = req.cookies.sasachid;
-
-  let userName = req.body.userName;
+  let userName = req.params.userName;
 
   let user = await User.findOne({ userName });
 

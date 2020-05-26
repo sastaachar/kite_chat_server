@@ -8,7 +8,7 @@ module.exports = (req, res, next) => {
 
     //pass the paylaod
     let payload = checkToken(token, process.env.JWT_KEY);
-    res.payload = payload;
+    req.payload = payload;
 
     //call the next middleware
     next();

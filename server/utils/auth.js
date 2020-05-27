@@ -30,7 +30,12 @@ const getRefreshJwtToken = (user) => {
 };
 
 const checkToken = (token, key) => {
-  return jwt.verify(token, key);
+  try {
+    let payload = jwt.verify(token, key);
+    return payload;
+  } catch (err) {
+    return false;
+  }
 };
 
 module.exports = {

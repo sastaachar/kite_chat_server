@@ -77,10 +77,16 @@ const loginUser = async (req, res) => {
       throw new Error("Auth Error");
 
     //get token and refresh token
-    const jwtToken = getJwtToken(user);
-    const refreshJwtToken = getRefreshJwtToken(user);
-
-    res.cookie("sasachid", refreshJwtToken, {
+    //add the jwtToken , refreshToken and userName
+    res.cookie("sasachid_tk", getJwtToken(user), {
+      maxAge: 60000,
+      httpOnly: true,
+    });
+    res.cookie("sasachid_rtk", getRefreshJwtToken(user), {
+      maxAge: 604800000,
+      httpOnly: true,
+    });
+    res.cookie("sasachid_un", user.userName, {
       maxAge: 604800000,
       httpOnly: true,
     });
@@ -94,7 +100,6 @@ const loginUser = async (req, res) => {
 
     res.status(200).json({
       message: "login Sucessfull",
-      jwtToken,
       userDetails,
     });
   } catch (err) {
@@ -103,9 +108,27 @@ const loginUser = async (req, res) => {
     });
   }
 };
+const logoutUser = async (req, res) => {
+  try {
+    //delete the token and username
+    res.cookie("sasachid_tk", "404");
+    res.cookie("sasachid_rtk", "404");
+    res.cookie("sasachid_un", "404");
+
+    res.status(200).json({
+      message: "logout Sucessfull",
+    });
+  } catch (err) {
+    res.status(401).json({
+      message: err,
+    });
+  }
+};
+
 module.exports = {
   addUser,
   loginUser,
   deleteUser,
   getUser,
+  logoutUser,
 };

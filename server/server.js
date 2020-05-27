@@ -8,6 +8,7 @@ const os = require("os");
 const mongoose = require("mongoose");
 const cors = require("cors");
 const http = require("http");
+const cookieParser = require("cookie-parser");
 
 //connect to DB
 (async () => {
@@ -33,6 +34,7 @@ const app = express();
 const server = http.createServer(app);
 
 //middlewares
+app.use(cookieParser());
 
 var whitelist = ["http://localhost:3000", "http://example2.com"];
 var corsOptions = {
@@ -46,12 +48,12 @@ var corsOptions = {
   credentials: true,
 };
 app.use(cors(corsOptions));
+
 app.use(express.json());
 
 //Routes
 app.use("/", require("./routes/main"));
 app.use("/users", require("./routes/users"));
-app.use("/refreshToken", require("./routes/refreshToken"));
 
 //start listening
 server.listen(PORT, () => {

@@ -33,10 +33,22 @@ const app = express();
 const server = http.createServer(app);
 
 //middlewares
-app.use(cors());
+
+var whitelist = ["http://localhost:3000", "http://example2.com"];
+var corsOptions = {
+  origin: function (origin, callback) {
+    if (whitelist.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
+  credentials: true,
+};
+app.use(cors(corsOptions));
 app.use(express.json());
 
-//Routees
+//Routes
 app.use("/", require("./routes/main"));
 app.use("/users", require("./routes/users"));
 app.use("/refreshToken", require("./routes/refreshToken"));

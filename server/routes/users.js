@@ -11,11 +11,13 @@ const {
 
 //the / route will be used to get details of a existing user or patch a user details
 router.get("/", jwtAuth, getUser);
+//router.patch()
+router.delete("/", jwtAuth, deleteUser);
 
+//signup path
 router.post("/signup", addUser);
 
+//login path
 router.post("/login", loginUser);
-
-router.delete("/", jwtAuth, deleteUser);
 
 module.exports = router;

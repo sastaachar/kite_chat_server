@@ -18,7 +18,6 @@ module.exports = async (req, res, next) => {
     let payload = checkToken(jwtToken, process.env.JWT_KEY);
 
     if (!payload) {
-      console.log("jwt expired");
       //check for the refreshtoken
       let user = await User.findOne({ userName });
 
@@ -48,7 +47,6 @@ module.exports = async (req, res, next) => {
     //call the next middleware
     next();
   } catch (err) {
-    console.log(err);
     res.status(409).json({
       message: "Forbidden",
     });

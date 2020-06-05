@@ -5,6 +5,7 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: true,
     unique: true,
+    maxlength: 256,
   },
   email: {
     type: String,
@@ -21,8 +22,23 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: true,
   },
-  friends_list: [String],
-  block_list: [String],
+  profilePic: {
+    type: String,
+  },
+  smallInfo: {
+    type: String,
+    maxlength: 240,
+  },
+  aboutMe: {
+    type: String,
+    maxlength: 500,
+  },
+  friends_list: {
+    type: [String],
+  },
+  block_list: {
+    type: [String],
+  },
 });
 
 module.exports = mongoose.model("User", userSchema);

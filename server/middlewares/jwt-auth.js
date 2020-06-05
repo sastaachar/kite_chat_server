@@ -25,7 +25,7 @@ module.exports = async (req, res, next) => {
         refreshJwtToken,
         process.env.JWT_REFRESH_KEY + user.password
       );
-      console.log(payload);
+
       //the jwt and refresh token failed
       if (!payload) {
         throw new Error("Auth Failed");

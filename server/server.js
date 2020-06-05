@@ -36,7 +36,7 @@ const server = http.createServer(app);
 //middlewares
 app.use(cookieParser());
 
-var whitelist = ["http://localhost:3000", "http://example2.com"];
+var whitelist = ["http://localhost:3000", "https://kite-chat.herokuapp.com"];
 var corsOptions = {
   origin: function (origin, callback) {
     if (whitelist.indexOf(origin) !== -1) {

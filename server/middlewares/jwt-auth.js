@@ -47,8 +47,8 @@ module.exports = async (req, res, next) => {
     //call the next middleware
     next();
   } catch (err) {
-    res.status(409).json({
-      message: "Forbidden",
+    res.status(401).json({
+      message: "Auth Failed",
     });
   }
 };

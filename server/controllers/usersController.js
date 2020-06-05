@@ -17,9 +17,11 @@ const addUser = async (req, res) => {
     });
     newuser = await newuser.save();
 
-    res.status(200).json({ message: "User Created" });
+    res
+      .status(200)
+      .json({ message: "User Created", userName: newuser.userName });
   } catch (err) {
-    res.status(401).json({ message: err.message });
+    res.status(422).json({ message: err.message });
   }
 };
 
@@ -54,7 +56,7 @@ const deleteUser = async (req, res) => {
     });
   } catch (err) {
     res.status(500).json({
-      message: err.message,
+      message: err,
     });
   }
 };
@@ -104,7 +106,7 @@ const loginUser = async (req, res) => {
     });
   } catch (err) {
     res.status(401).json({
-      message: err,
+      message: err.message,
     });
   }
 };

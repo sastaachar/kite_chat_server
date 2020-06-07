@@ -39,7 +39,8 @@ app.use(cookieParser());
 var whitelist = ["http://localhost:3000", "https://kite-chat.herokuapp.com"];
 var corsOptions = {
   origin: function (origin, callback) {
-    if (whitelist.indexOf(origin) !== -1) {
+    //the !origin is for services like postman
+    if (whitelist.indexOf(origin) !== -1 || !origin) {
       callback(null, true);
     } else {
       //i dont like this it prints the shit

@@ -1,8 +1,11 @@
 const bcrypt = require("bcrypt");
+const { uploader } = require("cloudinary").v2;
+const Datauri = require("datauri/parser");
+const path = require("path");
 
 const User = require("../models/user");
-
 const { getJwtToken, getRefreshJwtToken } = require("../utils/auth");
+const dUri = new Datauri();
 
 const addUser = async (req, res) => {
   try {
@@ -47,15 +50,20 @@ const getUser = async (req, res) => {
 
 const deleteUser = async (req, res) => {
   try {
-    console.log(req.params.userId);
     //delete the user here
     let userName = req.payload.userName;
+    //user also passes the name in params
+    if (req.params.userName !== userName) {
+      throw new Error("Auth failed");
+    }
+
     await User.deleteOne({ userName });
     res.status(200).json({
       message: `User ${userName} deleted sucessfully`,
     });
   } catch (err) {
-    res.status(500).json({
+    //406 is for unacceptable requests
+    res.status(406).json({
       message: err,
     });
   }
@@ -127,10 +135,63 @@ const logoutUser = async (req, res) => {
   }
 };
 
+const updateUserDetails = async (req, res) => {
+  try {
+    //updating user details the user here
+    //check user cred passed
+    let userName = req.payload.userName;
+    //user also passes the name in params
+    if (req.params.userName !== userName) {
+      throw new Error("Auth failed");
+    }
+
+    let reqUpdateMessage = {};
+    //check for inputs
+    if (req.file) {
+      //we got a file it means
+      //user wants to update the profilePic
+
+      //check if image already exists
+      const user = await User.findOne({ userName });
+      if (user.profilePic) {
+        //already exist so delete it
+        const deleteMessage = await uploader.destroy(user.profilePic.public_id);
+        if (deleteMessage.result !== "ok") {
+          throw new Error("Failed to remove Profile Image.");
+        }
+      }
+      const file = dUri.format(
+        path.extname(req.file.originalname).toString(),
+        req.file.buffer
+      ).content;
+
+      let img = await uploader.upload(file, { folder: "userProfiles" });
+
+      //now sotre url and public_id
+      const profilePic = {
+        public_id: img.public_id,
+        url: img.url,
+      };
+      //update the profilePic data
+      await User.updateOne({ userName }, { $set: { profilePic } });
+
+      res.status(200).json({
+        message: reqUpdateMessage,
+      });
+    }
+  } catch (err) {
+    res.status(401).json({
+      message: err.message,
+    });
+  }
+  //if image is uploaded
+};
+
 module.exports = {
   addUser,
   loginUser,
   deleteUser,
   getUser,
   logoutUser,
+  updateUserDetails,
 };

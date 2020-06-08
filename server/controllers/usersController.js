@@ -176,8 +176,6 @@ const updateUserProfilePic = async (req, res) => {
   }
 };
 
-//i wont be checking stupid requests like
-//adding and blocking self
 const updateUserDetails = async (req, res) => {
   //this function will be used to update
   //friends and block list
@@ -204,11 +202,16 @@ const updateUserDetails = async (req, res) => {
         }
       });
 
+      //user can be firends with themselves
+      new_friends = new_friends.filter((friend) => friend !== userName);
       //now add user to other persons request list if possible
       let to_be_friends = await User.find({ userName: { $in: new_friends } });
+      //only friends those who are in db no imagianry friends
+      new_friends = [];
       let send_req_to = [];
       to_be_friends.forEach((to_friend) => {
         //if not blocked or already friend dont send friend request
+        new_friends.push(to_friend.userName);
         if (
           !(
             to_friend.friends_list.includes(userName) ||
@@ -269,7 +272,9 @@ const updateUserDetails = async (req, res) => {
           }
         }
       });
-
+      //user can be firends with themselves
+      new_blocks = new_blocks.filter((friend) => friend !== userName);
+      //here user can also block imaginary(not in db) friends
       await User.updateOne(
         { userName },
         {

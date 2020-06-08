@@ -15,6 +15,7 @@ const {
   loginUser,
   getUser,
   logoutUser,
+  updateUserProfilePic,
   updateUserDetails,
 } = require("../controllers/usersController");
 
@@ -24,12 +25,13 @@ const {
 //the userName will be taken from the jwt token provided in the header
 router.get("/", jwtAuth, getUser);
 router.patch(
-  "/:userName",
+  "/profilePic/:userName",
   jwtAuth,
   multerUploads,
   cloudinaryConfig,
-  updateUserDetails
+  updateUserProfilePic
 );
+router.patch("/:userName", jwtAuth, updateUserDetails);
 router.delete("/:userName", jwtAuth, deleteUser);
 
 //signup path

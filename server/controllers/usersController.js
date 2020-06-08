@@ -135,7 +135,8 @@ const logoutUser = async (req, res) => {
   }
 };
 
-const updateUserDetails = async (req, res) => {
+const updateUserProfilePic = async (req, res) => {
+  //this will only update the user profile picture
   try {
     //updating user details the user here
     //check user cred passed
@@ -145,11 +146,9 @@ const updateUserDetails = async (req, res) => {
       throw new Error("Auth failed");
     }
 
-    let reqUpdateMessage = {};
-    //check for inputs
+    //check for a file
     if (req.file) {
-      //we got a file it means
-      //user wants to update the profilePic
+      //we got a file it means user wants to update the profilePic
 
       //check if image already exists
       const user = await User.findOne({ userName });
@@ -174,17 +173,118 @@ const updateUserDetails = async (req, res) => {
       };
       //update the profilePic data
       await User.updateOne({ userName }, { $set: { profilePic } });
-
-      res.status(200).json({
-        message: reqUpdateMessage,
-      });
     }
+
+    res.status(200).json({
+      message: "User profile picture updated sucessfully!",
+    });
   } catch (err) {
     res.status(401).json({
       message: err.message,
     });
   }
-  //if image is uploaded
+};
+const updateUserDetails = async (req, res) => {
+  //this function will be used to update
+  //friends and block list
+  //small and long info
+
+  try {
+    //updating user details the user here
+    //check user cred passed
+    let userName = req.payload.userName;
+    //user also passes the name in params
+    if (req.params.userName !== userName) {
+      throw new Error("Auth failed");
+    }
+
+    if (req.body.add_friends) {
+      const user = await User.findOne({ userName });
+      let new_friends = [],
+        old_blocks = [];
+      req.body.add_friends.forEach((friend) => {
+        //dont add same friend twice
+        if (!user.friends_list.includes(friend)) {
+          new_friends.push(friend);
+          //if in block list remove
+          if (user.block_list.includes(friend)) {
+            old_blocks.push(friend);
+          }
+        }
+      });
+      await User.updateOne(
+        { userName },
+        {
+          $push: { friends_list: { $each: new_friends } },
+          $pull: { block_list: { $in: old_blocks } },
+        }
+      );
+    }
+    if (req.body.block_friends) {
+      const user = await User.findOne({ userName });
+      let new_blocks = [],
+        old_friends = [];
+      req.body.block_friends.forEach((friend) => {
+        //dont block same friend twice
+        if (!user.block_list.includes(friend)) {
+          new_blocks.push(friend);
+          //if in friend list remove
+          if (user.friends_list.includes(friend)) {
+            old_friends.push(friend);
+          }
+        }
+      });
+
+      await User.updateOne(
+        { userName },
+        {
+          $push: { block_list: { $each: new_blocks } },
+          $pull: { friends_list: { $in: old_friends } },
+        }
+      );
+    }
+    if (req.body.remove_friends) {
+      await User.updateOne(
+        { userName },
+        {
+          $pull: { friends_list: { $in: req.body.remove_friends } },
+        }
+      );
+    }
+    if (req.body.remove_blocks) {
+      await User.updateOne(
+        { userName },
+        {
+          $pull: { block_list: { $in: req.body.remove_blocks } },
+        }
+      );
+    }
+    if (req.body.smallInfo) {
+      await User.updateOne(
+        { userName },
+        {
+          $set: { smallInfo: req.body.smallInfo },
+        },
+        { runValidators: true }
+      );
+    }
+    if (req.body.largeInfo) {
+      await User.updateOne(
+        { userName },
+        {
+          $set: { largeInfo: req.body.largeInfo },
+        },
+        { runValidators: true }
+      );
+    }
+    res.status(200).json({
+      message: "User details updated sucessfully!",
+    });
+  } catch (err) {
+    res.status(401).json({
+      message: err.message,
+    });
+  }
 };
 
 module.exports = {
@@ -193,5 +293,6 @@ module.exports = {
   deleteUser,
   getUser,
   logoutUser,
+  updateUserProfilePic,
   updateUserDetails,
 };

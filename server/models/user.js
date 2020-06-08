@@ -28,11 +28,11 @@ const userSchema = new mongoose.Schema({
   },
   smallInfo: {
     type: String,
-    maxlength: 240,
+    maxlength: 100,
   },
-  aboutMe: {
+  largeInfo: {
     type: String,
-    maxlength: 500,
+    maxlength: 240,
   },
   friends_list: {
     type: [String],

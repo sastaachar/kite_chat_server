@@ -152,7 +152,7 @@ const updateUserProfilePic = async (req, res) => {
 
       //check if image already exists
       const user = await User.findOne({ userName });
-      if (user.profilePic) {
+      if (user.profilePic.public_id) {
         //already exist so delete it
         const deleteMessage = await uploader.destroy(user.profilePic.public_id);
         if (deleteMessage.result !== "ok") {

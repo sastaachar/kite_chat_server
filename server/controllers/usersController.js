@@ -236,7 +236,6 @@ const updateUserDetails = async (req, res) => {
       );
     }
     if (req.body.requests_response) {
-      const user = await User.findOne({ userName });
       let respones_answered = [],
         added_users = [];
       req.body.requests_response.forEach((response) => {
@@ -260,6 +259,7 @@ const updateUserDetails = async (req, res) => {
       );
     }
     if (req.body.block_friends) {
+      const user = await User.findOne({ userName });
       let new_blocks = [],
         old_friends = [];
       req.body.block_friends.forEach((friend) => {

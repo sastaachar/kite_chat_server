@@ -52,11 +52,6 @@ const deleteUser = async (req, res) => {
   try {
     //delete the user here
     let userName = req.payload.userName;
-    //user also passes the name in params
-    if (req.params.userName !== userName) {
-      throw new Error("Auth failed");
-    }
-
     await User.deleteOne({ userName });
     res.status(200).json({
       message: `User ${userName} deleted sucessfully`,
@@ -141,10 +136,6 @@ const updateUserProfilePic = async (req, res) => {
     //updating user details the user here
     //check user cred passed
     let userName = req.payload.userName;
-    //user also passes the name in params
-    if (req.params.userName !== userName) {
-      throw new Error("Auth failed");
-    }
 
     //check for a file
     if (req.file) {
@@ -184,6 +175,9 @@ const updateUserProfilePic = async (req, res) => {
     });
   }
 };
+
+//i wont be checking stupid requests like
+//adding and blocking self
 const updateUserDetails = async (req, res) => {
   //this function will be used to update
   //friends and block list
@@ -193,11 +187,8 @@ const updateUserDetails = async (req, res) => {
     //updating user details the user here
     //check user cred passed
     let userName = req.payload.userName;
-    //user also passes the name in params
-    if (req.params.userName !== userName) {
-      throw new Error("Auth failed");
-    }
-
+    //i have not added the user in this scope ,
+    //cause then the changes wont be reflected for multiple changes
     if (req.body.add_friends) {
       const user = await User.findOne({ userName });
       let new_friends = [],
@@ -212,6 +203,27 @@ const updateUserDetails = async (req, res) => {
           }
         }
       });
+
+      //now add user to other persons request list if possible
+      let to_be_friends = await User.find({ userName: { $in: new_friends } });
+      let send_req_to = [];
+      to_be_friends.forEach((to_friend) => {
+        //if not blocked or already friend dont send friend request
+        if (
+          !(
+            to_friend.friends_list.includes(userName) ||
+            to_friend.block_list.includes(userName)
+          )
+        ) {
+          send_req_to.push(to_friend.userName);
+        }
+      });
+      //send friend request
+      await User.updateMany(
+        { userName: { $in: send_req_to } },
+        { $push: { pending_requests: userName } }
+      );
+      //update my user
       await User.updateOne(
         { userName },
         {
@@ -220,8 +232,31 @@ const updateUserDetails = async (req, res) => {
         }
       );
     }
-    if (req.body.block_friends) {
+    if (req.body.requests_response) {
       const user = await User.findOne({ userName });
+      let respones_answered = [],
+        added_users = [];
+      req.body.requests_response.forEach((response) => {
+        //check if it is there in the requests
+        if (user.pending_requests.includes(response.userName)) {
+          if (response.accepted) {
+            //user accepted the request
+            added_users.push(response.userName);
+          }
+          respones_answered.push(response.userName);
+        }
+      });
+      //added_users are the ones user accepted'
+      //respones_answered are all the reponse to request we got
+      await User.updateOne(
+        { userName },
+        {
+          $push: { friends_list: { $each: added_users } },
+          $pull: { pending_requests: { $in: respones_answered } },
+        }
+      );
+    }
+    if (req.body.block_friends) {
       let new_blocks = [],
         old_friends = [];
       req.body.block_friends.forEach((friend) => {
@@ -286,7 +321,9 @@ const updateUserDetails = async (req, res) => {
     });
   }
 };
-
+const deleteUserProfilePic = async (req, res) => {
+  //to be built
+};
 module.exports = {
   addUser,
   loginUser,
@@ -294,5 +331,6 @@ module.exports = {
   getUser,
   logoutUser,
   updateUserProfilePic,
+  deleteUserProfilePic,
   updateUserDetails,
 };

@@ -17,6 +17,7 @@ const {
   logoutUser,
   updateUserProfilePic,
   updateUserDetails,
+  deleteUserProfilePic,
 } = require("../controllers/usersController");
 
 //the / route will be used to get details of a existing user or patch a user details
@@ -25,14 +26,15 @@ const {
 //the userName will be taken from the jwt token provided in the header
 router.get("/", jwtAuth, getUser);
 router.patch(
-  "/profilePic/:userName",
+  "/profilePic",
   jwtAuth,
   multerUploads,
   cloudinaryConfig,
   updateUserProfilePic
 );
-router.patch("/:userName", jwtAuth, updateUserDetails);
-router.delete("/:userName", jwtAuth, deleteUser);
+router.delete("/profilePic", jwtAuth, cloudinaryConfig, deleteUserProfilePic);
+router.patch("/userDetails", jwtAuth, updateUserDetails);
+router.delete("/", jwtAuth, deleteUser);
 
 //signup path
 router.post("/signup", addUser);

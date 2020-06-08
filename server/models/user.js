@@ -40,6 +40,9 @@ const userSchema = new mongoose.Schema({
   block_list: {
     type: [String],
   },
+  pending_requests: {
+    type: [String],
+  },
 });
 
 module.exports = mongoose.model("User", userSchema);

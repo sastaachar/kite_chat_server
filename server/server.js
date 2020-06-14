@@ -45,7 +45,7 @@ var corsOptions = {
       callback(null, true);
     } else {
       //i dont like this it prints the shit
-
+      console.log(origin);
       callback(new Error("Not allowed by CORS"));
     }
   },

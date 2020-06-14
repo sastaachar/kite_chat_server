@@ -43,7 +43,6 @@ module.exports = async (req, res, next) => {
     }
     //the jwtToken worked
     req.payload = payload;
-
     //call the next middleware
     next();
   } catch (err) {

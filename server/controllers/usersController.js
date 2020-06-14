@@ -107,6 +107,10 @@ const loginUser = async (req, res) => {
       message: "login Sucessfull",
       userDetails,
     });
+    res.setHeader(
+      "Allow-Control-Allow-Origin",
+      "http://kite-chat.herokuapp.com"
+    );
   } catch (err) {
     res.status(401).json({
       message: err.message,

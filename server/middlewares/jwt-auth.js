@@ -43,7 +43,10 @@ module.exports = async (req, res, next) => {
     }
     //the jwtToken worked
     req.payload = payload;
-
+    res.setHeader(
+      "Allow-Control-Allow-Origin",
+      "http://kite-chat.herokuapp.com"
+    );
     //call the next middleware
     next();
   } catch (err) {

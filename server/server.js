@@ -30,6 +30,7 @@ const cookieParser = require("cookie-parser");
 })();
 
 //crearte server using http
+//we need to use http here for socket.io
 const app = express();
 const server = http.createServer(app);
 

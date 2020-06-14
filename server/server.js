@@ -55,6 +55,15 @@ app.use(cors(corsOptions));
 
 app.use(express.json());
 
+//redirect to https
+if (process.env.NODE_ENV === "production") {
+  app.use((req, res, next) => {
+    if (req.header("x-forwarded-proto") !== "https")
+      res.redirect(`https://${req.header("host")}${req.url}`);
+    else next();
+  });
+}
+
 //Routes
 app.use("/", require("./routes/main"));
 app.use("/users", require("./routes/users"));

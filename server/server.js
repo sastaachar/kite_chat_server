@@ -41,7 +41,7 @@ var whitelist = ["http://localhost:3000", "http://kite-chat.herokuapp.com"];
 var corsOptions = {
   origin: function (origin, callback) {
     //the !origin is for services like postman
-    if (whitelist.indexOf(origin) !== -1 || !origin) {
+    if (true) {
       callback(null, true);
     } else {
       //i dont like this it prints the shit

@@ -87,19 +87,19 @@ const loginUser = async (req, res) => {
       maxAge: 60000,
       httpOnly: true,
       secure: true,
-      sameSite: true,
+      sameSite: "None",
     });
     res.cookie("sasachid_rtk", getRefreshJwtToken(user), {
       maxAge: 604800000,
       httpOnly: true,
       secure: true,
-      sameSite: true,
+      sameSite: "None",
     });
     res.cookie("sasachid_un", user.userName, {
       maxAge: 604800000,
       httpOnly: true,
       secure: true,
-      sameSite: true,
+      sameSite: "None",
     });
 
     // bit of a hack
@@ -122,9 +122,9 @@ const loginUser = async (req, res) => {
 const logoutUser = async (req, res) => {
   try {
     //delete the token and username
-    res.cookie("sasachid_tk", "404");
-    res.cookie("sasachid_rtk", "404");
-    res.cookie("sasachid_un", "404");
+    res.cookie("sasachid_tk", "404", { maxAge: 1 });
+    res.cookie("sasachid_rtk", "404", { maxAge: 1 });
+    res.cookie("sasachid_un", "404", { maxAge: 1 });
 
     res.status(200).json({
       message: "logout Sucessfull",

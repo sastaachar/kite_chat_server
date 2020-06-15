@@ -35,10 +35,14 @@ module.exports = async (req, res, next) => {
       res.cookie("sasachid_tk", getJwtToken(user), {
         maxAge: 60000,
         httpOnly: true,
+        secure: true,
+        sameSite: true,
       });
       res.cookie("sasachid_rtk", getRefreshJwtToken(user), {
         maxAge: 604800000,
         httpOnly: true,
+        secure: true,
+        sameSite: true,
       });
     }
     //the jwtToken worked

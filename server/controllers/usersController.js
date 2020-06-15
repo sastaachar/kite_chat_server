@@ -86,14 +86,20 @@ const loginUser = async (req, res) => {
     res.cookie("sasachid_tk", getJwtToken(user), {
       maxAge: 60000,
       httpOnly: true,
+      secure: true,
+      sameSite: true,
     });
     res.cookie("sasachid_rtk", getRefreshJwtToken(user), {
       maxAge: 604800000,
       httpOnly: true,
+      secure: true,
+      sameSite: true,
     });
     res.cookie("sasachid_un", user.userName, {
       maxAge: 604800000,
       httpOnly: true,
+      secure: true,
+      sameSite: true,
     });
 
     // bit of a hack
@@ -107,10 +113,6 @@ const loginUser = async (req, res) => {
       message: "login Sucessfull",
       userDetails,
     });
-    res.setHeader(
-      "Allow-Control-Allow-Origin",
-      "http://kite-chat.herokuapp.com"
-    );
   } catch (err) {
     res.status(401).json({
       message: err.message,

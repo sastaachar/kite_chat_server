@@ -70,11 +70,11 @@ var corsOptions = {
   origin: function (origin, callback) {
     console.log(origin);
     //the !origin is for services like postman
+    console.log("New ", origin);
     if (whitelist.indexOf(origin) !== -1 || !origin) {
       callback(null, true);
     } else {
       //i dont like this it prints the shit
-      console.log(origin, typeof origin, whitelist.indexOf(origin));
       callback(new Error("Not allowed by CORS"));
     }
   },

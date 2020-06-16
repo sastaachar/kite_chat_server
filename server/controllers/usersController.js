@@ -42,7 +42,7 @@ const getUser = async (req, res) => {
     delete userDetails.__v;
 
     res.status(200).json({
-      message: userDetails ? "Found user" : "No such user idoit",
+      message: userDetails ? "Found user" : "No such idoit user",
       userDetails,
     });
   } catch (err) {
@@ -71,9 +71,9 @@ const deleteUser = async (req, res) => {
 const loginUser = async (req, res) => {
   try {
     //login the user here
-
     //if email is there login with that
     //else use userName
+
     let email_uname = req.body.email
       ? { email: req.body.email }
       : { userName: req.body.userName };
@@ -87,6 +87,7 @@ const loginUser = async (req, res) => {
 
     //get token and refresh token
     //add the jwtToken , refreshToken and userName
+
     res.cookie("sasachid_tk", getJwtToken(user), getCookieOptions(60000));
     res.cookie(
       "sasachid_rtk",

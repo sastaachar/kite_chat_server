@@ -36,7 +36,7 @@ const socketio = require("socket.io");
 const app = express();
 const server = http.createServer(app);
 const io = socketio(server, {
-  origins: "localhost:3000* http://localhost:3000:* http://www.domain.com:*",
+  origins: "localhost:3000* http://localhost:3000:* http://localhost:3000*",
 });
 
 io.use((socket, next) => {
@@ -70,9 +70,8 @@ app.use(cookieParser());
 var whitelist = ["http://localhost:3000", "https://kite-chat.herokuapp.com"];
 var corsOptions = {
   origin: function (origin, callback) {
-    console.log(origin);
     //the !origin is for services like postman
-    console.log("New ", origin);
+
     if (whitelist.indexOf(origin) !== -1 || !origin) {
       callback(null, true);
     } else {
@@ -82,6 +81,7 @@ var corsOptions = {
   },
   credentials: true,
 };
+
 app.use(cors(corsOptions));
 
 app.use(express.json());
@@ -99,6 +99,11 @@ app.use(express.json());
 //Routes
 app.use("/", require("./routes/main"));
 app.use("/users", require("./routes/users"));
+
+app.use("/socket.io", (req, res) => {
+  console.log("thos called");
+  req.header("Access-Control-Allow-Origin", "localhost:3000");
+});
 
 //start listening
 server.listen(PORT, () => {

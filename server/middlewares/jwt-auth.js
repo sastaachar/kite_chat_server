@@ -8,6 +8,7 @@ const {
 const User = require("../models/user");
 module.exports = async (req, res, next) => {
   try {
+    res.setHeader("Access-Control-Allow-Origin", "http://localhost:3000");
     //first check the jwt token
     //if not valid check the refresh token
     //if refresh found set the cookies
@@ -45,7 +46,6 @@ module.exports = async (req, res, next) => {
     //call the next middleware
     next();
   } catch (err) {
-    console.log(err);
     res.status(401).json({
       message: "Auth Failed",
     });

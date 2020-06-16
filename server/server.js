@@ -35,7 +35,9 @@ const socketio = require("socket.io");
 //we need to use http here for socket.io
 const app = express();
 const server = http.createServer(app);
-const io = socketio(server);
+const io = socketio(server, {
+  origins: "localhost:3000* http://localhost:3000:* http://www.domain.com:*",
+});
 
 io.use((socket, next) => {
   try {

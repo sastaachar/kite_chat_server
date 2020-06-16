@@ -2,6 +2,7 @@ const {
   checkToken,
   getJwtToken,
   getRefreshJwtToken,
+  getCookieOptions,
 } = require("../utils/auth");
 
 const User = require("../models/user");
@@ -32,24 +33,19 @@ module.exports = async (req, res, next) => {
       }
       //if the refreshJwtToken worked
       //so set new tokens
-      res.cookie("sasachid_tk", getJwtToken(user), {
-        maxAge: 60000,
-        httpOnly: true,
-        secure: true,
-        sameSite: true,
-      });
-      res.cookie("sasachid_rtk", getRefreshJwtToken(user), {
-        maxAge: 604800000,
-        httpOnly: true,
-        secure: true,
-        sameSite: true,
-      });
+      res.cookie("sasachid_tk", getJwtToken(user), getCookieOptions(60000));
+      res.cookie(
+        "sasachid_rtk",
+        getRefreshJwtToken(user),
+        getCookieOptions(604800000)
+      );
     }
     //the jwtToken worked
     req.payload = payload;
     //call the next middleware
     next();
   } catch (err) {
+    console.log(err);
     res.status(401).json({
       message: "Auth Failed",
     });

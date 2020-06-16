@@ -4,7 +4,11 @@ const Datauri = require("datauri/parser");
 const path = require("path");
 
 const User = require("../models/user");
-const { getJwtToken, getRefreshJwtToken } = require("../utils/auth");
+const {
+  getJwtToken,
+  getRefreshJwtToken,
+  getCookieOptions,
+} = require("../utils/auth");
 const dUri = new Datauri();
 
 const addUser = async (req, res) => {
@@ -83,24 +87,13 @@ const loginUser = async (req, res) => {
 
     //get token and refresh token
     //add the jwtToken , refreshToken and userName
-    res.cookie("sasachid_tk", getJwtToken(user), {
-      maxAge: 60000,
-      httpOnly: true,
-      secure: true,
-      sameSite: "None",
-    });
-    res.cookie("sasachid_rtk", getRefreshJwtToken(user), {
-      maxAge: 604800000,
-      httpOnly: true,
-      secure: true,
-      sameSite: "None",
-    });
-    res.cookie("sasachid_un", user.userName, {
-      maxAge: 604800000,
-      httpOnly: true,
-      secure: true,
-      sameSite: "None",
-    });
+    res.cookie("sasachid_tk", getJwtToken(user), getCookieOptions(60000));
+    res.cookie(
+      "sasachid_rtk",
+      getRefreshJwtToken(user),
+      getCookieOptions(604800000)
+    );
+    res.cookie("sasachid_un", user.userName, getCookieOptions(604800000));
 
     // bit of a hack
     // don't send unnessary data idiot
@@ -122,9 +115,9 @@ const loginUser = async (req, res) => {
 const logoutUser = async (req, res) => {
   try {
     //delete the token and username
-    res.cookie("sasachid_tk", "404", { maxAge: 1 });
-    res.cookie("sasachid_rtk", "404", { maxAge: 1 });
-    res.cookie("sasachid_un", "404", { maxAge: 1 });
+    res.cookie("sasachid_tk", "404", getCookieOptions(0));
+    res.cookie("sasachid_rtk", "404", getCookieOptions(0));
+    res.cookie("sasachid_un", "404", getCookieOptions(0));
 
     res.status(200).json({
       message: "logout Sucessfull",

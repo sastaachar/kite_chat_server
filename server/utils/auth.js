@@ -38,8 +38,17 @@ const checkToken = (token, key) => {
   }
 };
 
+//dont user secure for development
+const getCookieOptions = (TTL) => ({
+  maxAge: TTL,
+  httpOnly: true,
+  secure: process.env.NODE_ENV !== "development",
+  sameSite: "None",
+});
+
 module.exports = {
   getJwtToken,
   getRefreshJwtToken,
   checkToken,
+  getCookieOptions,
 };

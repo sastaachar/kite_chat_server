@@ -9,6 +9,7 @@ const mongoose = require("mongoose");
 const cors = require("cors");
 const http = require("http");
 const cookieParser = require("cookie-parser");
+const socketio = require("socket.io");
 
 //connect to DB
 (async () => {
@@ -29,10 +30,37 @@ const cookieParser = require("cookie-parser");
   }
 })();
 
+//remove all this stupidity from here and port these to the new server
 //crearte server using http
 //we need to use http here for socket.io
 const app = express();
 const server = http.createServer(app);
+const io = socketio(server);
+
+io.use((socket, next) => {
+  try {
+    let cookies = socket.handshake.headers.cookie;
+
+    //split and parse the cookies
+    let cookieObj = {};
+    cookies.split(";").map((cookie) => {
+      let key_value = cookie.split("=");
+      cookieObj[key_value[0].trim()] = key_value[1];
+    });
+
+    if (cookieObj.sasachid_tk) {
+      console.log(`User ${cookieObj.sasachid_un} allowed`);
+      next();
+    } else {
+      throw new Error("Auth fail");
+    }
+  } catch (err) {
+    next(err);
+  }
+}).on("connection", (socket) => {
+  //console.log(socket.handshake);
+  console.log(socket.connected);
+});
 
 //middlewares
 app.use(cookieParser());
@@ -40,6 +68,7 @@ app.use(cookieParser());
 var whitelist = ["http://localhost:3000", "https://kite-chat.herokuapp.com"];
 var corsOptions = {
   origin: function (origin, callback) {
+    console.log(origin);
     //the !origin is for services like postman
     if (whitelist.indexOf(origin) !== -1 || !origin) {
       callback(null, true);

@@ -38,7 +38,7 @@ const checkToken = (token, key) => {
   }
 };
 
-//dont user secure for development
+//dont user secure for development i.e localhost
 const getCookieOptions = (TTL) => ({
   maxAge: TTL,
   httpOnly: true,

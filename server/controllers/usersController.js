@@ -36,7 +36,10 @@ const getUser = async (req, res) => {
   try {
     let userName = req.payload.userName;
     let user = await User.findOne({ userName });
-    let userDetails = { ...user._doc };
+    //since we are able to access this function it means the middleware
+    //has passed the token here and we can send it to client now
+    //but user will get this only once every minute
+    let userDetails = { ...user._doc, jwtToken: req.jwtToken };
     delete userDetails._id;
     delete userDetails.password;
     delete userDetails.__v;
@@ -87,8 +90,8 @@ const loginUser = async (req, res) => {
 
     //get token and refresh token
     //add the jwtToken , refreshToken and userName
-
-    res.cookie("sasachid_tk", getJwtToken(user), getCookieOptions(60000));
+    let jwtToken = getJwtToken(user);
+    res.cookie("sasachid_tk", jwtToken, getCookieOptions(60000));
     res.cookie(
       "sasachid_rtk",
       getRefreshJwtToken(user),
@@ -98,7 +101,7 @@ const loginUser = async (req, res) => {
 
     // bit of a hack
     // don't send unnessary data idiot
-    let userDetails = { ...user._doc };
+    let userDetails = { ...user._doc, jwtToken };
     delete userDetails._id;
     delete userDetails.password;
     delete userDetails.__v;

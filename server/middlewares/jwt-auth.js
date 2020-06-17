@@ -33,13 +33,16 @@ module.exports = async (req, res, next) => {
       }
       //if the refreshJwtToken worked
       //so set new tokens
-      res.cookie("sasachid_tk", getJwtToken(user), getCookieOptions(60000));
+      //this var is used to forward tje jwtToken to client for chatServer
+      jwtToken = getJwtToken(user);
+      res.cookie("sasachid_tk", jwtToken, getCookieOptions(60000));
       res.cookie(
         "sasachid_rtk",
         getRefreshJwtToken(user),
         getCookieOptions(604800000)
       );
     }
+    req.jwtToken = jwtToken;
     //the jwtToken worked
     req.payload = payload;
     //call the next middleware

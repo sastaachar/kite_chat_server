@@ -18,6 +18,7 @@ const {
   updateUserProfilePic,
   updateUserDetails,
   deleteUserProfilePic,
+  getFriendDetails,
 } = require("../controllers/usersController");
 
 //the / route will be used to get details of a existing user or patch a user details
@@ -42,6 +43,10 @@ router.post("/signup", addUser);
 //login path
 router.post("/login", loginUser);
 
+//to logout
 router.get("/logout", logoutUser);
+
+//to get friends details
+router.get("/friendDetails", jwtAuth, getFriendDetails);
 
 module.exports = router;

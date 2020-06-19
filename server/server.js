@@ -42,12 +42,13 @@ app.use(cookieParser());
 var whitelist = ["http://localhost:3000", "https://kite-chat.herokuapp.com"];
 var corsOptions = {
   origin: function (origin, callback) {
-    //the !origin is for services like postman
-    if (whitelist.indexOf(origin) !== -1 || !origin) {
+    //add !origin for services like postman
+    if (whitelist.indexOf(origin) !== -1) {
       callback(null, true);
     } else {
-      //i dont like this it prints the shit
-      callback(new Error("Not allowed by CORS"));
+      //i dont like this it logs the shit
+      //-can use customErrorHandler
+      callback(new Error("Not allowed by CORS."));
     }
   },
   credentials: true,

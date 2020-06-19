@@ -34,6 +34,7 @@ const addUser = async (req, res) => {
 
 const getUser = async (req, res) => {
   try {
+    //--use projection to get only things needed here
     let userName = req.payload.userName;
     let user = await User.findOne({ userName });
     //since we are able to access this function it means the middleware
@@ -332,12 +333,29 @@ const updateUserDetails = async (req, res) => {
 const deleteUserProfilePic = async (req, res) => {
   //to be built
 };
+
+const getFriendDetails = async (req, res) => {
+  let { friends_list } = await User.findOne(
+    { userName: req.payload.userName },
+    { friends_list: 1 }
+  );
+
+  let friendsInfo = await User.find(
+    { userName: { $in: friends_list } },
+    { userName: 1, profilePic: 1, smallInfo: 1, largeInfo: 1 }
+  );
+
+  console.log(friendsInfo);
+  res.status(200).json({ a: "1" });
+};
+
 module.exports = {
   addUser,
   loginUser,
   deleteUser,
   getUser,
   logoutUser,
+  getFriendDetails,
   updateUserProfilePic,
   deleteUserProfilePic,
   updateUserDetails,

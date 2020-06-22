@@ -15,7 +15,7 @@ const userSchema = new mongoose.Schema({
   },
   isPublic: {
     type: Boolean,
-    default: true,
+    default: false,
     required: true,
   },
   password: {

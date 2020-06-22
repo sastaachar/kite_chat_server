@@ -37,6 +37,7 @@ const getUser = async (req, res) => {
     //--use projection to get only things needed here
     let userName = req.payload.userName;
     let user = await User.findOne({ userName });
+
     //since we are able to access this function it means the middleware
     //has passed the token here and we can send it to client now
     //but user will get this only once every minute
@@ -77,6 +78,10 @@ const loginUser = async (req, res) => {
     //login the user here
     //if email is there login with that
     //else use userName
+
+    //this is cool
+    if (req.cookies.sasachid_un || req.cookies.sasachid_rtk)
+      throw new Error("User already connected.");
 
     let email_uname = req.body.email
       ? { email: req.body.email }
@@ -335,18 +340,20 @@ const deleteUserProfilePic = async (req, res) => {
 };
 
 const getFriendDetails = async (req, res) => {
-  let { friends_list } = await User.findOne(
-    { userName: req.payload.userName },
-    { friends_list: 1 }
-  );
+  try {
+    let { friends_list } = await User.findOne(
+      { userName: req.payload.userName },
+      { friends_list: 1 }
+    );
 
-  let friendsInfo = await User.find(
-    { userName: { $in: friends_list } },
-    { userName: 1, profilePic: 1, smallInfo: 1, largeInfo: 1 }
-  );
-
-  console.log(friendsInfo);
-  res.status(200).json({ a: "1" });
+    let allFriends = await User.find(
+      { userName: { $in: friends_list } },
+      { userName: 1, "profilePic.url": 1, smallInfo: 1, largeInfo: 1, _id: 0 }
+    );
+    res.status(200).json({ allFriends });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
 };
 
 module.exports = {

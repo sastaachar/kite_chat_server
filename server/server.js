@@ -58,6 +58,7 @@ app.use(cors(corsOptions));
 
 app.use(express.json());
 
+//-dem
 //redirect to https
 //does'nt make much sense on a server FOR NOW
 // if (process.env.NODE_ENV === "production") {

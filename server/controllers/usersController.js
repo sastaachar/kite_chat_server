@@ -11,7 +11,8 @@ const {
 } = require("../utils/auth");
 const dUri = new Datauri();
 
-const addUser = async (req, res) => {
+//signuupMethod
+const signupUser = async (req, res) => {
   try {
     if (!req.body.password) throw new Error("Password cannot be empty!");
 
@@ -365,7 +366,7 @@ const getFriendDetails = async (req, res) => {
 };
 
 module.exports = {
-  addUser,
+  signupUser,
   loginUser,
   deleteUser,
   getUser,

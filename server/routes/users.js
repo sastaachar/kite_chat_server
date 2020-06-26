@@ -10,7 +10,7 @@ const multerUploads = multer({ storage }).single("profilePicture");
 //
 
 const {
-  addUser,
+  signupUser,
   deleteUser,
   loginUser,
   getUser,
@@ -38,7 +38,7 @@ router.patch("/userDetails", jwtAuth, updateUserDetails);
 router.delete("/", jwtAuth, deleteUser);
 
 //signup path
-router.post("/signup", addUser);
+router.post("/signup", signupUser);
 
 //login path
 router.post("/login", loginUser);

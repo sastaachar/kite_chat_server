@@ -5,6 +5,7 @@ const userSchema = new mongoose.Schema({
     type: String,
     required: true,
     unique: true,
+    match: /^[a-zA-Z0-9]+([.-_]?[a-zA-Z0-9]+)*$/,
     maxlength: 256,
   },
   email: {

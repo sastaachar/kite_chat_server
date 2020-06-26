@@ -11,10 +11,12 @@ module.exports = async (req, res, next) => {
     //first check the jwt token
     //if not valid check the refresh token
     //if refresh found set the cookies
-    let refreshJwtToken = req.cookies.sasachid_rtk;
-    let jwtToken = req.cookies.sasachid_tk;
-    let userName = req.cookies.sasachid_un;
+    let refreshJwtToken = req.cookies._sasachid_rtk;
+    let jwtToken = req.cookies._sasachid_tk;
+    let userName = req.cookies._sasachid_un;
 
+    //username is stored signed with JWT_KEY
+    userName = checkToken(userName, process.env.JWT_KEY).userName;
     //pass the paylaod
     let payload = checkToken(jwtToken, process.env.JWT_KEY);
 
@@ -34,16 +36,24 @@ module.exports = async (req, res, next) => {
       //if the refreshJwtToken worked
       //so set new tokens
       //this var is used to forward tje jwtToken to client for chatServer
-      jwtToken = getJwtToken(user);
-      res.cookie("sasachid_tk", jwtToken, getCookieOptions(60000));
+      jwtToken = getJwtToken(user, false);
+      res.cookie("_sasachid_tk", jwtToken, getCookieOptions(60000));
       res.cookie(
-        "sasachid_rtk",
+        "_sasachid_rtk",
         getRefreshJwtToken(user),
         getCookieOptions(604800000)
       );
+      //this will store spl token that is signed with jwt key but longer
+      res.cookie(
+        "_sasachid_un",
+        getJwtToken(user, true),
+        getCookieOptions(604800000)
+      );
     }
+    //the jwtToken worked or a newone is assigned
+    //pass the jwtToken
     req.jwtToken = jwtToken;
-    //the jwtToken worked
+
     req.payload = payload;
     //call the next middleware
     next();

@@ -80,9 +80,11 @@ const loginUser = async (req, res) => {
     //else use userName
 
     //this is cool
-    if (req.cookies.sasachid_un || req.cookies.sasachid_rtk)
+    //if user has both tokens then they cant login again
+    if (req.cookies._sasachid_un && req.cookies._sasachid_rtk)
       throw new Error("User already connected.");
 
+    //-only use username
     let email_uname = req.body.email
       ? { email: req.body.email }
       : { userName: req.body.userName };
@@ -97,14 +99,20 @@ const loginUser = async (req, res) => {
     //get token and refresh token
     //add the jwtToken , refreshToken and userName
     let jwtToken = getJwtToken(user);
-    res.cookie("sasachid_tk", jwtToken, getCookieOptions(60000));
+    res.cookie("_sasachid_tk", jwtToken, getCookieOptions(60000));
     res.cookie(
-      "sasachid_rtk",
+      "_sasachid_rtk",
       getRefreshJwtToken(user),
       getCookieOptions(604800000)
     );
-    res.cookie("sasachid_un", user.userName, getCookieOptions(604800000));
-
+    //this will store spl token that is signed with jwt key but longer
+    res.cookie(
+      "_sasachid_un",
+      getJwtToken(user, true),
+      getCookieOptions(604800000)
+    );
+    //-use projection here
+    //i dint want to call the find again
     // bit of a hack
     // don't send unnessary data idiot
     let userDetails = { ...user._doc, jwtToken };
@@ -125,9 +133,9 @@ const loginUser = async (req, res) => {
 const logoutUser = async (req, res) => {
   try {
     //delete the token and username
-    res.cookie("sasachid_tk", "404", getCookieOptions(0));
-    res.cookie("sasachid_rtk", "404", getCookieOptions(0));
-    res.cookie("sasachid_un", "404", getCookieOptions(0));
+    res.cookie("_sasachid_tk", "404", getCookieOptions(0));
+    res.cookie("_sasachid_rtk", "404", getCookieOptions(0));
+    res.cookie("_sasachid_un", "404", getCookieOptions(0));
 
     res.status(200).json({
       message: "logout Sucessfull",

@@ -1,14 +1,15 @@
 const jwt = require("jsonwebtoken");
 
-const getJwtToken = (user) => {
+const getJwtToken = (user, long) => {
   const token = jwt.sign(
     {
-      email: user.email,
       userName: user.userName,
+      refresh: long ? "true" : "false",
+      secureKey: long ? "#9810fka1" : null,
     },
     process.env.JWT_KEY,
     {
-      expiresIn: "1m",
+      expiresIn: long ? "7d" : "1m",
     }
   );
 
@@ -18,8 +19,8 @@ const getJwtToken = (user) => {
 const getRefreshJwtToken = (user) => {
   const token = jwt.sign(
     {
-      email: user.email,
       userName: user.userName,
+      refresh: "true",
     },
     process.env.JWT_REFRESH_KEY + user.password,
     {

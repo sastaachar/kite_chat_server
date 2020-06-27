@@ -44,6 +44,9 @@ const userSchema = new mongoose.Schema({
   pending_requests: {
     type: [String],
   },
+  pending_approvals: {
+    type: [String],
+  },
 });
 
 module.exports = mongoose.model("User", userSchema);

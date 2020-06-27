@@ -200,60 +200,49 @@ const updateUserDetails = async (req, res) => {
   //small and long info
 
   try {
+    //messages related to all the reqs (if all pass)
+    let message = "";
     //updating user details the user here
     //check user cred passed
     let userName = req.payload.userName;
     //i have not added the user in this scope ,
     //cause then the changes wont be reflected for multiple changes
-    if (req.body.add_friends) {
-      const user = await User.findOne({ userName });
-      let new_friends = [],
-        old_blocks = [];
-      req.body.add_friends.forEach((friend) => {
-        //dont add same friend twice
-        if (!user.friends_list.includes(friend)) {
-          new_friends.push(friend);
-          //if in block list remove
-          if (user.block_list.includes(friend)) {
-            old_blocks.push(friend);
-          }
-        }
-      });
 
-      //user can be firends with themselves
-      new_friends = new_friends.filter((friend) => friend !== userName);
-      //now add user to other persons request list if possible
-      let to_be_friends = await User.find({ userName: { $in: new_friends } });
-      //only friends those who are in db no imagianry friends
-      new_friends = [];
-      let send_req_to = [];
-      to_be_friends.forEach((to_friend) => {
-        //if not blocked or already friend dont send friend request
-        new_friends.push(to_friend.userName);
-        if (
-          !(
-            to_friend.friends_list.includes(userName) ||
-            to_friend.block_list.includes(userName)
-          )
-        ) {
-          send_req_to.push(to_friend.userName);
-        }
-      });
-      //send friend request
-      await User.updateMany(
-        { userName: { $in: send_req_to } },
-        { $push: { pending_requests: userName } }
-      );
-      //update my user
-      await User.updateOne(
-        { userName },
-        {
-          $push: { friends_list: { $each: new_friends } },
-          $pull: { block_list: { $in: old_blocks } },
-        }
-      );
+    //To ADD FIREND (single)
+    if (req.body.add_friend) {
+      const user = await User.findOne({ userName });
+      const friendToBe = await User.findOne({ userName: req.body.add_friend });
+
+      //if already friend OR req sent OR friend doesnt exist OR they already block
+      // OR i block them
+      if (
+        !friendToBe ||
+        user.userName === friendToBe.userName ||
+        user.friends_list.includes(friendToBe.userName) ||
+        user.block_list.includes(friendToBe.userName) ||
+        user.pending_approvals.includes(friendToBe.userName) ||
+        user.pending_requests.includes(friendToBe.userName) ||
+        friendToBe.block_list.includes(userName)
+      ) {
+        //change this to 409 if needed
+        message += "Can't add user,";
+      } else {
+        //friend is new connection
+        await User.updateOne(
+          { userName: friendToBe.userName },
+          { $push: { pending_requests: user.userName } }
+        );
+        await User.updateOne(
+          { userName: user.userName },
+          { $push: { pending_approvals: friendToBe.userName } }
+        );
+        message += `Req sent to ${friendToBe.userName},`;
+      }
     }
+
+    //requests_reponse = [ { userName : name , accepted : true/false } , {}... ]
     if (req.body.requests_response) {
+      const user = await User.findOne({ userName });
       let respones_answered = [],
         added_users = [];
       req.body.requests_response.forEach((response) => {
@@ -268,6 +257,18 @@ const updateUserDetails = async (req, res) => {
       });
       //added_users are the ones user accepted'
       //respones_answered are all the reponse to request we got
+
+      //remove my name from their approval list
+      await User.updateMany(
+        { userName: { $in: respones_answered } },
+        { $pull: { pending_approvals: user.userName } }
+      );
+      // and add to their friend list
+      await User.updateMany(
+        { userName: { $in: added_users } },
+        { $push: { friends_list: user.userName } }
+      );
+      //update self
       await User.updateOne(
         { userName },
         {
@@ -275,39 +276,81 @@ const updateUserDetails = async (req, res) => {
           $pull: { pending_requests: { $in: respones_answered } },
         }
       );
+      message += "reponded requests,";
     }
-    if (req.body.block_friends) {
+    //list of users to cancel approval
+    if (req.body.cancel_approval) {
+      let cancelList = req.body.cancel_approval;
       const user = await User.findOne({ userName });
-      let new_blocks = [],
-        old_friends = [];
-      req.body.block_friends.forEach((friend) => {
-        //dont block same friend twice
-        if (!user.block_list.includes(friend)) {
-          new_blocks.push(friend);
-          //if in friend list remove
-          if (user.friends_list.includes(friend)) {
-            old_friends.push(friend);
-          }
-        }
-      });
-      //user can be firends with themselves
-      new_blocks = new_blocks.filter((friend) => friend !== userName);
-      //here user can also block imaginary(not in db) friends
+      //remove my req from everyone's acc
+      await User.updateMany(
+        { userName: { $in: cancelList } },
+        { $pull: { pending_requests: userName } }
+      );
+      //remove all(in cancelList) pending approvals from acc
       await User.updateOne(
         { userName },
-        {
-          $push: { block_list: { $each: new_blocks } },
-          $pull: { friends_list: { $in: old_friends } },
-        }
+        { $pull: { pending_approvals: { $in: cancelList } } }
       );
+      message += "canceled all possible approvals,";
+    }
+
+    //block a single user
+    if (req.body.block_friend) {
+      const user = await User.findOne({ userName });
+      const blockedToBe = await User.findOne({
+        userName: req.body.block_friend,
+      });
+      if (
+        !blockedToBe ||
+        user.userName === blockedToBe.userName ||
+        user.block_list.includes(blockedToBe.userName)
+      ) {
+        message += "Not blocked,";
+      } else {
+        //remove any connection
+        await User.updateOne(
+          { userName: blockedToBe.userName },
+          {
+            $pull: {
+              friends_list: userName,
+              pending_approvals: userName,
+              pending_requests: userName,
+            },
+          }
+        );
+
+        //remove any connection and block
+        await User.updateOne(
+          { userName },
+          {
+            $pull: {
+              friends_list: blockedToBe.userName,
+              pending_approvals: blockedToBe.userName,
+              pending_requests: blockedToBe.userName,
+            },
+            $push: {
+              block_list: blockedToBe.userName,
+            },
+          }
+        );
+        message += `Blocked ${blockedToBe.userName},`;
+      }
     }
     if (req.body.remove_friends) {
+      //remove all friends from my list
       await User.updateOne(
         { userName },
         {
           $pull: { friends_list: { $in: req.body.remove_friends } },
         }
       );
+      //remove my name from their list
+      await User.updateMany(
+        { userName: { $in: req.body.remove_friends } },
+        { $pull: { friends_list: userName } }
+      );
+      message += "unfriended all possible users,";
     }
     if (req.body.remove_blocks) {
       await User.updateOne(
@@ -316,6 +359,7 @@ const updateUserDetails = async (req, res) => {
           $pull: { block_list: { $in: req.body.remove_blocks } },
         }
       );
+      message += "blocked all possible users,";
     }
     if (req.body.smallInfo) {
       await User.updateOne(
@@ -336,7 +380,7 @@ const updateUserDetails = async (req, res) => {
       );
     }
     res.status(200).json({
-      message: "User details updated sucessfully!",
+      message: `User details updated sucessfully! ${message}`,
     });
   } catch (err) {
     res.status(401).json({
@@ -350,13 +394,13 @@ const deleteUserProfilePic = async (req, res) => {
 
 const getFriendDetails = async (req, res) => {
   try {
-    let { friends_list } = await User.findOne(
+    let { friends_list, block_list, pending_requests } = await User.findOne(
       { userName: req.payload.userName },
-      { friends_list: 1 }
+      { friends_list: 1, block_list: 1, pending_requests: 1 }
     );
-
+    let allContacts = [...friends_list, ...pending_requests];
     let allFriends = await User.find(
-      { userName: { $in: friends_list } },
+      { userName: { $in: allContacts } },
       { userName: 1, "profilePic.url": 1, smallInfo: 1, largeInfo: 1, _id: 0 }
     );
     res.status(200).json({ allFriends });

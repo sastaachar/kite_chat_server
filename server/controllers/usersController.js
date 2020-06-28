@@ -369,6 +369,7 @@ const updateUserDetails = async (req, res) => {
         },
         { runValidators: true }
       );
+      message += "largeInfo updated,";
     }
     if (req.body.largeInfo) {
       await User.updateOne(
@@ -378,9 +379,12 @@ const updateUserDetails = async (req, res) => {
         },
         { runValidators: true }
       );
+      message += "smallInfo updated,";
     }
+    const updatedUserDetails = await User.findOne({ userName });
     res.status(200).json({
       message: `User details updated sucessfully! ${message}`,
+      updateUserDetails,
     });
   } catch (err) {
     res.status(401).json({

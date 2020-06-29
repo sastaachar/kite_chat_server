@@ -17,6 +17,7 @@ module.exports = async (req, res, next) => {
 
     //username is stored signed with JWT_KEY
     userName = checkToken(userName, process.env.JWT_KEY).userName;
+
     //pass the paylaod
     let payload = checkToken(jwtToken, process.env.JWT_KEY);
 

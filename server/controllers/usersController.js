@@ -37,15 +37,19 @@ const getUser = async (req, res) => {
   try {
     //--use projection to get only things needed here
     let userName = req.payload.userName;
-    let user = await User.findOne({ userName });
+    let user = await User.findOne(
+      { userName },
+      {
+        _id: 0,
+        password: 0,
+        __v: 0,
+      }
+    );
 
     //since we are able to access this function it means the middleware
     //has passed the token here and we can send it to client now
     //but user will get this only once every minute
     let userDetails = { ...user._doc, jwtToken: req.jwtToken };
-    delete userDetails._id;
-    delete userDetails.password;
-    delete userDetails.__v;
 
     res.status(200).json({
       message: userDetails ? "Found user" : "No such idoit user",
@@ -382,9 +386,10 @@ const updateUserDetails = async (req, res) => {
       message += "smallInfo updated,";
     }
     const updatedUserDetails = await User.findOne({ userName });
+    console.log(message);
     res.status(200).json({
       message: `User details updated sucessfully! ${message}`,
-      updateUserDetails,
+      updatedUserDetails,
     });
   } catch (err) {
     res.status(401).json({
@@ -398,15 +403,28 @@ const deleteUserProfilePic = async (req, res) => {
 
 const getFriendDetails = async (req, res) => {
   try {
-    let { friends_list, block_list, pending_requests } = await User.findOne(
+    let {
+      friends_list,
+      block_list,
+      pending_requests,
+      pending_approvals,
+    } = await User.findOne(
       { userName: req.payload.userName },
-      { friends_list: 1, block_list: 1, pending_requests: 1 }
+      {
+        friends_list: 1,
+        block_list: 1,
+        pending_requests: 1,
+        pending_approvals: 1,
+      }
     );
-    let allContacts = [...friends_list, ...pending_requests];
     let allFriends = await User.find(
-      { userName: { $in: allContacts } },
+      { userName: { $in: [...friends_list, ...pending_requests] } },
       { userName: 1, "profilePic.url": 1, smallInfo: 1, largeInfo: 1, _id: 0 }
     );
+    //add userName to allFriends for block list and pending approvals
+    [...pending_approvals, ...block_list].forEach((ele) => {
+      allFriends.push({ userName: ele });
+    });
     res.status(200).json({ allFriends });
   } catch (err) {
     res.status(500).json({ message: err.message });

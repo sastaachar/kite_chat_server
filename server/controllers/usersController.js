@@ -56,6 +56,7 @@ const getUser = async (req, res) => {
       userDetails,
     });
   } catch (err) {
+    // - we may clear all the cookies , since they are not working
     res.status(401).json({
       message: err,
     });
@@ -64,16 +65,36 @@ const getUser = async (req, res) => {
 
 const deleteUser = async (req, res) => {
   try {
-    //delete the user here
-    let userName = req.payload.userName;
+    const userName = req.payload.userName;
+    const user = await User.findOne({ userName });
+
+    // remove this user from all friend list
+    await User.updateMany(
+      { userName: { $in: user.friends_list } },
+      { $pull: { friends_list: userName } }
+    );
+
+    // remove any pending requests - (approval from others)
+    await User.updateMany(
+      { userName: { $in: user.pending_requests } },
+      { $pull: { pending_approvals: userName } }
+    );
+
+    // remove any approvals - (pending requests from others)
+    await User.updateMany(
+      { userName: { $in: user.pending_requests } },
+      { $pull: { pending_approvals: userName } }
+    );
+
+    // delete the stupid user
     await User.deleteOne({ userName });
+
     res.status(200).json({
-      message: `User ${userName} deleted sucessfully`,
+      message: `user ${userName} deleted sucessfuly!`,
     });
   } catch (err) {
-    //406 is for unacceptable requests
-    res.status(406).json({
-      message: err,
+    res.status(500).json({
+      message: err.message,
     });
   }
 };
@@ -246,10 +267,12 @@ const updateUserDetails = async (req, res) => {
 
     //requests_reponse = [ { userName : name , accepted : true/false } , {}... ]
     if (req.body.requests_response) {
+      console.log(req.body.requests_response);
       const user = await User.findOne({ userName });
       let respones_answered = [],
         added_users = [];
       req.body.requests_response.forEach((response) => {
+        console.log(response.userName);
         //check if it is there in the requests
         if (user.pending_requests.includes(response.userName)) {
           if (response.accepted) {
@@ -261,7 +284,7 @@ const updateUserDetails = async (req, res) => {
       });
       //added_users are the ones user accepted'
       //respones_answered are all the reponse to request we got
-
+      console.log(user.pending_requests, respones_answered, added_users);
       //remove my name from their approval list
       await User.updateMany(
         { userName: { $in: respones_answered } },
@@ -341,6 +364,7 @@ const updateUserDetails = async (req, res) => {
         message += `Blocked ${blockedToBe.userName},`;
       }
     }
+
     if (req.body.remove_friends) {
       //remove all friends from my list
       await User.updateOne(
@@ -398,7 +422,15 @@ const updateUserDetails = async (req, res) => {
   }
 };
 const deleteUserProfilePic = async (req, res) => {
-  //to be built
+  try {
+    res.status(200).json({
+      message: "Pic not deleted",
+    });
+  } catch {
+    res.status(500).json({
+      message: err.message,
+    });
+  }
 };
 
 const getFriendDetails = async (req, res) => {

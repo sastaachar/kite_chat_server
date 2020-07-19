@@ -29,7 +29,7 @@ const signupUser = async (req, res) => {
     // // async email
     jwt.sign(
       {
-        user: newuser.userName,
+        userName: newuser.userName,
       },
       process.env.EMAIL_SECRET,
       {

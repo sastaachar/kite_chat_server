@@ -72,6 +72,7 @@ app.use(express.json());
 //Routes
 app.use("/", require("./routes/main"));
 app.use("/users", require("./routes/users"));
+app.use("/account", require("./routes/account"));
 
 //start listening
 server.listen(PORT, () => {

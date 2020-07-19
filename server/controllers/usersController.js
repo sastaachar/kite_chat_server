@@ -2,6 +2,7 @@ const bcrypt = require("bcrypt");
 const { uploader } = require("cloudinary").v2;
 const Datauri = require("datauri/parser");
 const path = require("path");
+const jwt = require("jsonwebtoken");
 
 const User = require("../models/user");
 const {
@@ -9,6 +10,7 @@ const {
   getRefreshJwtToken,
   getCookieOptions,
 } = require("../utils/auth");
+const transporter = require("../utils/transporter");
 const dUri = new Datauri();
 
 //signuupMethod
@@ -24,6 +26,25 @@ const signupUser = async (req, res) => {
       password: hashedPassword,
     });
     newuser = await newuser.save();
+    // // async email
+    jwt.sign(
+      {
+        user: newuser.userName,
+      },
+      process.env.EMAIL_SECRET,
+      {
+        expiresIn: "3h",
+      },
+      (err, emailToken) => {
+        const url = `${process.env.CLIENT_URL}/account/verification/${emailToken}`;
+        transporter.sendMail({
+          from: `Kite Chat <${process.env.GMAIL_USER}>`,
+          to: req.body.email,
+          subject: "Confirm Email",
+          html: `Please click this email to confirm your email: <a href="${url}">Click me</a>`,
+        });
+      }
+    );
 
     res
       .status(200)
@@ -117,11 +138,16 @@ const loginUser = async (req, res) => {
 
     let user = await User.findOne(email_uname);
 
+    //if user is not verified
+    if (!user.verified) {
+      throw new Error("PLease verify your email address!");
+    }
+
     //if user doesnt exist or
     //wrong password
-    if (!user || !bcrypt.compareSync(req.body.password, user.password))
+    if (!user || !bcrypt.compareSync(req.body.password, user.password)) {
       throw new Error("Auth Error");
-
+    }
     //get token and refresh token
     //add the jwtToken , refreshToken and userName
     let jwtToken = getJwtToken(user);

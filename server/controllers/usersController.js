@@ -41,7 +41,9 @@ const signupUser = async (req, res) => {
           from: `Kite Chat <${process.env.GMAIL_USER}>`,
           to: req.body.email,
           subject: "Confirm Email",
-          html: `Please click this email to confirm your email: <a href="${url}">Click me</a>`,
+          html: `Hey ${newuser.userName} 
+          You are one click away,
+          Hit the verify button and start chatting <a href="${url}">Click me</a>`,
         });
       }
     );
@@ -129,7 +131,7 @@ const loginUser = async (req, res) => {
     //this is cool
     //if user has both tokens then they cant login again
     if (req.cookies._sasachid_un && req.cookies._sasachid_rtk)
-      throw new Error("User already connected.");
+      throw new Error("alreadyConnected");
 
     //-only use username
     let email_uname = req.body.email
@@ -138,16 +140,17 @@ const loginUser = async (req, res) => {
 
     let user = await User.findOne(email_uname);
 
-    //if user is not verified
-    if (!user.verified) {
-      throw new Error("PLease verify your email address!");
-    }
-
     //if user doesnt exist or
     //wrong password
     if (!user || !bcrypt.compareSync(req.body.password, user.password)) {
       throw new Error("Auth Error");
     }
+
+    //if user is not verified
+    if (!user.verified) {
+      throw new Error("notVerified");
+    }
+
     //get token and refresh token
     //add the jwtToken , refreshToken and userName
     let jwtToken = getJwtToken(user);
@@ -177,7 +180,13 @@ const loginUser = async (req, res) => {
       userDetails,
     });
   } catch (err) {
-    res.status(401).json({
+    let status = 500;
+    if (
+      ["notVerified", "alreadyConnected", "Auth Error"].includes(err.message)
+    ) {
+      status = 400;
+    }
+    res.status(status).json({
       message: err.message,
     });
   }

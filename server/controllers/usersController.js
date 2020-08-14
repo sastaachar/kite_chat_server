@@ -4,6 +4,8 @@ const Datauri = require("datauri/parser");
 const path = require("path");
 const jwt = require("jsonwebtoken");
 
+const { getMailContent } = require("../utils/mailContent");
+
 const User = require("../models/user");
 const {
   getJwtToken,
@@ -15,6 +17,12 @@ const dUri = new Datauri();
 
 //signuupMethod
 const signupUser = async (req, res) => {
+  transporter.sendMail({
+    from: `Kite Chat <${process.env.GMAIL_USER}>`,
+    to: req.body.email,
+    subject: "Confirm Email",
+    html: getMailContent("adawdawd", "awdawvdv"),
+  });
   try {
     if (!req.body.password) throw new Error("Password cannot be empty!");
 
